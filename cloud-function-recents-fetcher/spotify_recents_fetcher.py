@@ -51,15 +51,19 @@ def pubsub(event, context):
         if track['uri'] in track_uri_set:
             continue
         track_uri_set.add(track['uri'])
-        track_data = {
-            'name': track['name'],
-            'artists': [{'name': artist['name']} for artist in track['artists']],
-            'album': track['album']['name'],
-            'album_art_url': next(image['url'] for image in track['album']['images'] if image['height'] == 300 and image['width'] == 300),
-            'preview_url': track['preview_url'],
-            'spotify_url': track['external_urls']['spotify'],
-        }
-        tracks.append(track_data)
+
+        # check that there is a 300 x 300 album art file
+        album = next((image['url'] for image in track['album']['images'] if image['height'] == 300 and image['width'] == 300), None)
+        if album:
+            track_data = {
+                'name': track['name'],
+                'artists': [{'name': artist['name']} for artist in track['artists']],
+                'album': track['album']['name'],
+                'album_art_url': album,
+                'preview_url': track['preview_url'],
+                'spotify_url': track['external_urls']['spotify'],
+            }
+            tracks.append(track_data)
 
     shuffle(tracks)
 
@@ -99,3 +103,6 @@ def pubsub(event, context):
 
     # override the blob
     blob.upload_from_string(json.dumps(tracks_json), content_type='application/octet-stream')
+
+if __name__ == "__main__":
+    pubsub(None, None)
