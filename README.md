@@ -27,3 +27,13 @@ Cloud Scheduler -publishes-> Pub/Sub Topic <-subscribed- Cloud Functions
                                                       Spotify recents/ API
 
 ```
+
+Deploy the api 
+```shell
+gcloud endpoints services deploy openapi-appengine.yaml
+```
+
+Deploy the app engine app
+```shell
+gcloud app deploy
+```
