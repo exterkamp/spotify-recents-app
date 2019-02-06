@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, request
 from flask import jsonify
 from google.cloud import storage
 import json
@@ -15,14 +15,35 @@ from random import shuffle
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
-# db = firestore.Client()
-# tracks = db.collection('spotify-tracks')
-
-# client = storage.Client()
-# bucket = client.get_bucket('spotify-cached-results')
+MAX_TRACKS = 25
 
 client = datastore.Client()
 query = client.query(kind='Track')
+
+@app.route('/tracks', methods=['GET'])
+def getTracks():
+    count = min(int(request.args.get('count', default=1)), MAX_TRACKS)
+    blacklist = request.args.get('blacklist', default=[])
+
+    query.order = ['played_at']
+    # fetch the last 25 entries, then we will prune from there
+    entities = list(query.fetch(limit=MAX_TRACKS))
+    tracks = []
+
+    for entity in entities:
+        track = {x: entity[x] for x in entity.keys()}
+        track["uri"]= entity.key.name
+        if track["uri"] not in blacklist:
+            tracks.append(track)
+
+    # shuffle the tracks
+    shuffle(tracks)
+
+    # limit the tracks to count
+    if len(tracks) > count:
+        tracks = tracks[0:count]
+
+    return jsonify(tracks)
 
 @app.route('/recents', methods=['GET'])
 def recents():
@@ -31,27 +52,13 @@ def recents():
     # print(hour_ago.timestamp())
     query.order = ['played_at']
     # query.add_filter('played_at', '>=', hour_ago.timestamp())
-    entities = list(query.fetch(limit=25))
+    entities = list(query.fetch(limit=20))
     tracks = []
 
     for entity in entities:
         track = {x: entity[x] for x in entity.keys()}
         track["uri"]= entity.key.name
         tracks.append(track)
-    # d = json.loads(bucket.get_blob("data.json").download_as_string().decode("utf-8"))
-
-    # # docs = db.collection('spotify-tracks').where('updated', '>', datetime.now() - timedelta(hours=1)).get()
-
-    # return jsonify(d)
-    # # docs = tracks.order_by('updated').limit(20).get()
-
-    # ret = []
-
-    # for doc in docs:
-    #     ret.append(doc.to_dict())
-    #     # rint(u'{} => {}'.format(doc.id, doc.to_dict()))
-
-    # shuffle(ret)
 
     # shuffle list and get 3
     shuffle(tracks)

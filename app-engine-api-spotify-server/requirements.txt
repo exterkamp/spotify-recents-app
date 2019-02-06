@@ -7,3 +7,5 @@ requests==2.20.1
 google-auth==1.6.1
 google-auth-oauthlib==0.2.0
 google-cloud-storage
+google-cloud-datastore
+grpcio
