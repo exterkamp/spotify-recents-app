@@ -25,7 +25,7 @@ def getTracks():
     count = min(int(request.args.get('count', default=1)), MAX_TRACKS)
     blacklist = request.args.get('blacklist', default=[])
 
-    query.order = ['played_at']
+    query.order = ['-played_at']
     # fetch the last 25 entries, then we will prune from there
     entities = list(query.fetch(limit=MAX_TRACKS))
     tracks = []
@@ -50,7 +50,7 @@ def recents():
 
     hour_ago = datetime.datetime.now() - datetime.timedelta(hours=6)
     # print(hour_ago.timestamp())
-    query.order = ['played_at']
+    query.order = ['-played_at']
     # query.add_filter('played_at', '>=', hour_ago.timestamp())
     entities = list(query.fetch(limit=20))
     tracks = []
